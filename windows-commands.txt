@@ -1,0 +1,11 @@
+Project run:
+go build && .\xyz.exe config/local-config.json 
+
+upto-date
+go mod tidy
+
+module initialize
+go mod init module_name
+
+package/library install:
+go get package_name/library
