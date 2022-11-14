@@ -17,7 +17,7 @@ func (hrdeptrepo *HrdeptRepository) GetAllEmployee() model.ResponseDto {
 	defer sqlDB.Close()
 	
 	var ab []model.Hrdept
-	result := db.Find(&ab)
+	result := db.Order("code desc").Find(&ab)
 	if result.RowsAffected == 0 {
 		output.Message = "No country info found"
 		output.IsSuccess = false
