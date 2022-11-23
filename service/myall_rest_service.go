@@ -41,6 +41,8 @@ type MyAllRestService struct {
 	// tokenService             *TokenService
 	// authorizationService     *AuthorizationService
 	hrrestservice *HrService
+	designationservice *DesignationRestService
+
 }
 
 // NewTbsCommonRestService retuens a new initialized version of the service
@@ -114,7 +116,7 @@ func (myAllRestService *MyAllRestService) Serve(address string, port int, stopSi
 	// srv.authorizationService.AddRouters(router)
 	myAllRestService.countryRestService.AddRouters(router)
 	myAllRestService.hrrestservice.AddRouters(router)
-
+	myAllRestService.designationservice.AddRouters(router)
 	//ReportGeneration service
 	httpServer := &http.Server{
 		Addr:    fmt.Sprintf("%s:%d", address, port),

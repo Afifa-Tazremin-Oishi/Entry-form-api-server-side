@@ -17,9 +17,9 @@ func (hrdeptrepo *HrdeptRepository) GetAllEmployee() model.ResponseDto {
 	defer sqlDB.Close()
 	
 	var ab []model.Hrdept
-	result := db.Order("code desc").Find(&ab)
+	result := db.Order("code").Find(&ab)
 	if result.RowsAffected == 0 {
-		output.Message = "No country info found"
+		output.Message = "No Department info found"
 		output.IsSuccess = false
 		output.Payload = nil
 		output.StatusCode = http.StatusNotFound
@@ -32,7 +32,7 @@ func (hrdeptrepo *HrdeptRepository) GetAllEmployee() model.ResponseDto {
 	var tOutput tempOutPut
 	tOutput.Output = ab
 	tOutput.OutputCount = len(ab)
-	output.Message = "List of countries"
+	output.Message = "List of departments"
 	output.IsSuccess = true
 	output.Payload = tOutput
 	output.StatusCode = http.StatusOK
@@ -86,14 +86,6 @@ func (hrdeptrepo *HrdeptRepository) AddEmployee(c model.Hrdept) model.ResponseDt
 		return output
 
 	}
-	if c.Name == "" {
-		output.Message = "Name can't be null"
-		output.IsSuccess = false
-		output.Payload = nil
-		output.StatusCode = http.StatusBadRequest
-		return output
-
-	}
 	if c.Dept == "" {
 		output.Message = "Dept can't be null"
 		output.IsSuccess = false
@@ -111,10 +103,19 @@ func (hrdeptrepo *HrdeptRepository) AddEmployee(c model.Hrdept) model.ResponseDt
 		output.IsSuccess = false
 		output.Payload = nil
 		output.StatusCode = http.StatusBadRequest
+		return output
+	}
+	res:= db.Raw("select * from public.hrdept where dept=? ",c.Dept).First(&c)
+	if res.RowsAffected !=0{
+		output.Message ="Dept name alread exist"
+		output.IsSuccess = false
+		output.Payload=nil
+		output.StatusCode = http.StatusBadRequest
+		return output
 	}
 	result1 := db.Create(&c)
 	if result1.RowsAffected == 0 {
-		output.Message = "Name creation failed"
+		output.Message = "Department creation failed"
 		output.IsSuccess = false
 		output.Payload = nil
 		output.StatusCode = http.StatusNotFound
@@ -142,14 +143,6 @@ func (hrdeptrepo *HrdeptRepository) Update(input model.Hrdept) model.ResponseDto
 		response.StatusCode = http.StatusBadRequest
 		return response
 	}
-	if input.Name == "" {
-		response.Message = "Name can't be null"
-		response.IsSuccess = false
-		response.Payload = nil
-		response.StatusCode = http.StatusBadRequest
-		return response
-
-	}
 	if input.Dept == "" {
 		response.Message = "Dept can't be null"
 		response.IsSuccess = false
@@ -171,7 +164,6 @@ func (hrdeptrepo *HrdeptRepository) Update(input model.Hrdept) model.ResponseDto
 		return response
 	}
 	output.Dept = input.Dept
-	output.Name = input.Name
 	result1 := db.Where(&model.Hrdept{Code: input.Code}).Updates(&output)
 	if result1.RowsAffected == 0 {
 		response.Message = "No Employee info found for given criteria"
