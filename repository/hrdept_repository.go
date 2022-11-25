@@ -2,6 +2,7 @@ package repository
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/xyz/model"
 	"github.com/xyz/util"
@@ -105,9 +106,9 @@ func (hrdeptrepo *HrdeptRepository) AddEmployee(c model.Hrdept) model.ResponseDt
 		output.StatusCode = http.StatusBadRequest
 		return output
 	}
-	res:= db.Raw("select * from public.hrdept where dept=? ",c.Dept).First(&c)
+	res:= db.Raw("select * from public.hrdept where lower (dept)=? ",strings.ToLower(c.Dept)).First(&c)
 	if res.RowsAffected !=0{
-		output.Message ="Dept name alread exist"
+		output.Message ="Deptartment name alread exist"
 		output.IsSuccess = false
 		output.Payload=nil
 		output.StatusCode = http.StatusBadRequest

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/xyz/model"
 	"github.com/xyz/util"
@@ -107,31 +108,31 @@ func (designationrepo *DesignationRepository) AddDesignation(c model.Desig) mode
 		output.Message = "Employee Code is already exist"
 		output.IsSuccess = false
 		output.Payload = nil
-		output.StatusCode = http.StatusBadRequest
+		output.StatusCode = http.StatusConflict
 		return output
 	}
-	result1 := db.Raw("Select * from public.desig where designstion =?", c.Designation).First(&c)
-	if result1.RowsAffected !=0{
-		output.Message ="Designation is alread exist"
+	result1 := db.Raw("Select * from public.desig where lower(designation) =? and lower(sdesignation) = ?", strings.ToLower(c.Designation), strings.ToLower(c.Sdesignation)).First(&c)
+	if result1.RowsAffected != 0 {
+		output.Message = "Designation Or Short_Designation is alread exist"
 		output.IsSuccess = false
-		output.Payload=nil
-		output.StatusCode = http.StatusBadRequest
+		output.Payload = nil
+		output.StatusCode = http.StatusConflict
 		return output
 	}
-	result2 := db.Raw("Select * from public.desig where designstion =?", c.Sdesignation).First(&c)
-	if result2.RowsAffected !=0{
-		output.Message ="Designation is alread exist"
-		output.IsSuccess = false
-		output.Payload=nil
-		output.StatusCode = http.StatusBadRequest
-		return output
-	}
+	// result2 := db.Raw("Select * from public.desig where sdesignation =?", c.Sdesignation).First(&c)
+	// if result2.RowsAffected !=0{
+	// 	output.Message ="Designation is alread exist"
+	// 	output.IsSuccess = false
+	// 	output.Payload=nil
+	// 	output.StatusCode = http.StatusBadRequest
+	// 	return output
+	// }
 	result3 := db.Create(&c)
 	if result3.RowsAffected == 0 {
 		output.Message = "Designation creation failed"
 		output.IsSuccess = false
 		output.Payload = nil
-		output.StatusCode = http.StatusNotFound
+		output.StatusCode = http.StatusInternalServerError
 		return output
 	}
 
@@ -140,10 +141,10 @@ func (designationrepo *DesignationRepository) AddDesignation(c model.Desig) mode
 	}
 	var a abc
 	a.Output = c
-	output.Message = "Employee create succesfully"
+	output.Message = "Designation create succesfully"
 	output.IsSuccess = true
 	output.Payload = a
-	output.StatusCode = http.StatusCreated
+	output.StatusCode = http.StatusOK
 	return output
 }
 
