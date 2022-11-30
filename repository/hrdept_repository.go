@@ -16,7 +16,7 @@ func (hrdeptrepo *HrdeptRepository) GetAllEmployee() model.ResponseDto {
 	db := util.CreateConnection()
 	sqlDB, _ := db.DB()
 	defer sqlDB.Close()
-	
+
 	var ab []model.Hrdept
 	result := db.Order("code").Find(&ab)
 	if result.RowsAffected == 0 {
@@ -79,14 +79,14 @@ func (hrdeptrepo *HrdeptRepository) GetEmployeeById(c model.Hrdept) model.Respon
 
 func (hrdeptrepo *HrdeptRepository) AddEmployee(c model.Hrdept) model.ResponseDto {
 	var output model.ResponseDto
-	if c.Code <= 0 {
-		output.Message = "Invalid code"
-		output.IsSuccess = false
-		output.Payload = nil
-		output.StatusCode = http.StatusBadRequest
-		return output
+	// if c.Code <= 0 {
+	// 	output.Message = "Invalid code"
+	// 	output.IsSuccess = false
+	// 	output.Payload = nil
+	// 	output.StatusCode = http.StatusBadRequest
+	// 	return output
 
-	}
+	// }
 	if c.Dept == "" {
 		output.Message = "Dept can't be null"
 		output.IsSuccess = false
@@ -98,24 +98,31 @@ func (hrdeptrepo *HrdeptRepository) AddEmployee(c model.Hrdept) model.ResponseDt
 	sqlDB, _ := db.DB()
 	defer sqlDB.Close()
 
-	result := db.Raw("Select * from public.hrdept where code =?", c.Code).First(&c)
+	tx := db.Begin()
+	tx.SavePoint("savepoint")
+
+	result := tx.Raw("Select * from public.hrdept where code =?", c.Code).First(&c)
 	if result.RowsAffected != 0 {
-		output.Message = "Employee Code is already exist"
+		tx.RollbackTo("savepoint")
+		output.Message = "Department Code is already exist"
 		output.IsSuccess = false
 		output.Payload = nil
 		output.StatusCode = http.StatusBadRequest
 		return output
 	}
-	res:= db.Raw("select * from public.hrdept where lower (dept)=? ",strings.ToLower(c.Dept)).First(&c)
-	if res.RowsAffected !=0{
-		output.Message ="Deptartment name alread exist"
+	res := tx.Raw("select * from public.hrdept where lower (dept)=? ", strings.ToLower(c.Dept)).First(&c)
+	if res.RowsAffected != 0 {
+		tx.RollbackTo("savepoint")
+		output.Message = "Deptartment name alread exist"
 		output.IsSuccess = false
-		output.Payload=nil
+		output.Payload = nil
 		output.StatusCode = http.StatusBadRequest
 		return output
 	}
-	result1 := db.Create(&c)
+	// _ = tx.Raw("select coalesce ((max(code)+1),1) from public.hrdept").First(&c)
+	result1 := tx.Create(&c)
 	if result1.RowsAffected == 0 {
+		tx.RollbackTo("savepoint")
 		output.Message = "Department creation failed"
 		output.IsSuccess = false
 		output.Payload = nil
@@ -123,6 +130,7 @@ func (hrdeptrepo *HrdeptRepository) AddEmployee(c model.Hrdept) model.ResponseDt
 		return output
 	}
 
+	tx.Commit()
 	type abc struct {
 		Output model.Hrdept `json:"output"`
 	}
@@ -205,5 +213,34 @@ func (hrdeptrepo *HrdeptRepository) Delete(c model.Hrdept) model.ResponseDto {
 	output.IsSuccess = true
 	output.Payload = nil
 	output.StatusCode = http.StatusOK
+	return output
+}
+
+func (hrdeptrepo *HrdeptRepository) MaxDeptCode(c model.Hrdept) model.ResponseDto {
+	var output model.ResponseDto
+	db := util.CreateConnection()
+	sqlDB, _ := db.DB()
+	defer sqlDB.Close()
+
+	tx := db.Begin()
+	tx.SavePoint("savepoint")
+	var outputcode model.Hrdept
+	result := tx.Raw("select max(code+1) from public.hrdept").First(&outputcode.Code)
+	if result.RowsAffected == 0 {
+		tx.RollbackTo("savepoint")
+		output.IsSuccess = false
+		output.StatusCode = http.StatusNotFound
+		output.Message = "Internal Server error!"
+		output.Payload = nil
+		return output
+	}
+
+	tx.Commit()
+
+	output.IsSuccess = true
+	output.StatusCode = 200
+	output.Message = "Max code for new dept entry"
+	output.Payload = outputcode
+
 	return output
 }

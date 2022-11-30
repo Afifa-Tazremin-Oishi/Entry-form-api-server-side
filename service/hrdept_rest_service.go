@@ -64,6 +64,19 @@ func (hrrestservice *HrService) DeleteEmployeeService(c *gin.Context){
 	response := repo.Delete(a)
 	c.JSON(response.StatusCode,response)
 }
+func(hrrestservice *HrService)GetMaxDeptCode(c *gin.Context){
+	c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+	c.Writer.Header().Set("Content-Type", "application/json")	
+	var input model.Hrdept
+	c.ShouldBind(&input)
+
+	rep := new(repository.HrdeptRepository)
+	res := rep.MaxDeptCode(input)
+	c.JSON(res.StatusCode, res)
+
+}
+
+
 
 func (hrrestservice *HrService) AddRouters(router *gin.Engine){
 	router.POST("/add",hrrestservice.InsertEmployeeService)
@@ -71,4 +84,5 @@ func (hrrestservice *HrService) AddRouters(router *gin.Engine){
 	router.POST("/getemployeebyid",hrrestservice.GetEmployeeById)
 	router.PATCH("/updateemployee",hrrestservice.UpdateEmployeeService)
 	router.DELETE("/deleteemployee",hrrestservice.DeleteEmployeeService)
+	router.GET("/maxdeptcode",hrrestservice.GetMaxDeptCode)
 }

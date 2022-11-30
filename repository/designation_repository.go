@@ -105,7 +105,7 @@ func (designationrepo *DesignationRepository) AddDesignation(c model.Desig) mode
 	//result := db.Raw("Select * from public.desig where code =?", c.Code).First(&c)
 	result := db.Where(&model.Desig{Code: c.Code}).First(&c)
 	if result.RowsAffected != 0 {
-		output.Message = "Employee Code is already exist"
+		output.Message = "Department Code is already exist"
 		output.IsSuccess = false
 		output.Payload = nil
 		output.StatusCode = http.StatusConflict
