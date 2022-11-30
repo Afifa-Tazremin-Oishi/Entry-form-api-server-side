@@ -225,7 +225,7 @@ func (hrdeptrepo *HrdeptRepository) MaxDeptCode(c model.Hrdept) model.ResponseDt
 	tx := db.Begin()
 	tx.SavePoint("savepoint")
 	var outputcode model.Hrdept
-	result := tx.Raw("select max(code+1) from public.hrdept").First(&outputcode.Code)
+	result := tx.Raw("select max(code)+1 from public.hrdept").First(&outputcode.Code)
 	if result.RowsAffected == 0 {
 		tx.RollbackTo("savepoint")
 		output.IsSuccess = false

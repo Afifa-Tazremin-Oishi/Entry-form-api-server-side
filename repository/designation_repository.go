@@ -229,3 +229,32 @@ func (designationrepo *DesignationRepository) Delete(c model.Desig) model.Respon
 	output.StatusCode = http.StatusOK
 	return output
 }
+func (designationrepo *DesignationRepository) MaxDeptCode(c model.Desig) model.ResponseDto {
+	var output model.ResponseDto
+	db := util.CreateConnection()
+	sqlDB, _ := db.DB()
+	defer sqlDB.Close()
+
+	tx := db.Begin()
+	tx.SavePoint("savepoint")
+	var outputcode model.Desig
+	result := tx.Raw("select max(code)+1 from public.desig").First(&outputcode.Code)
+	if result.RowsAffected == 0 {
+		tx.RollbackTo("savepoint")
+		output.IsSuccess = false
+		output.StatusCode = http.StatusNotFound
+		output.Message = "Internal Server error!"
+		output.Payload = nil
+		return output
+	}
+
+	tx.Commit()
+
+	output.IsSuccess = true
+	output.StatusCode = 200
+	output.Message = "Max code for new dept entry"
+	output.Payload = outputcode
+
+	return output
+}
+

@@ -62,10 +62,24 @@ func (designationRestService *DesignationRestService) DeleteDesignation(c *gin.C
 
 }
 
+func(designationRestService *DesignationRestService) GetMaxDeptCode(c *gin.Context){
+	c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+	c.Writer.Header().Set("Content-Type", "application/json")	
+	var input model.Desig
+	c.ShouldBind(&input)
+
+	rep := new(repository.DesignationRepository)
+	res := rep.MaxDeptCode(input)
+	c.JSON(res.StatusCode, res)
+
+}
+
+
 func (designationRestService *DesignationRestService) AddRouters(router *gin.Engine) {
 	router.GET("/getalldesignation", designationRestService.GetAllDesignation)
 	router.POST("/getdesigbyid", designationRestService.GetById )
 	router.POST("/adddasignation", designationRestService.AddDesignation)
 	router.PATCH("/updatedesigntion", designationRestService.UpdateDesignation)
 	router.DELETE("/deletedesigntion", designationRestService.DeleteDesignation)
+	router.GET("/maxdesigcode",designationRestService.GetMaxDeptCode)
 }
